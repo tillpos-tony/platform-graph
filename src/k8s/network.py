@@ -217,9 +217,7 @@ def _parse_network_policy(
             # assume same namespace.)
             src_namespace = namespace
 
-            source_workloads = _workloads_matching_selector(
-                pod_sel, src_namespace, workload_index
-            )
+            source_workloads = _workloads_matching_selector(pod_sel, src_namespace, workload_index)
             for src_wl in source_workloads:
                 for tgt_wl in target_workloads:
                     if src_wl is tgt_wl:
@@ -270,9 +268,7 @@ def _parse_cilium_network_policy(
         return []
 
     # Resolve source workloads from endpointSelector
-    source_workloads = _workloads_matching_selector(
-        ep_match_labels, namespace, workload_index
-    )
+    source_workloads = _workloads_matching_selector(ep_match_labels, namespace, workload_index)
     if not source_workloads:
         return []
 

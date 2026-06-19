@@ -107,8 +107,9 @@ class TestRenderOverlay:
         mock_result.returncode = 1
         mock_result.stderr = "Error: kustomize build failed"
 
-        with patch("subprocess.run", return_value=mock_result), pytest.raises(
-            RuntimeError, match="kustomize build failed"
+        with (
+            patch("subprocess.run", return_value=mock_result),
+            pytest.raises(RuntimeError, match="kustomize build failed"),
         ):
             render_overlay("/bad/overlay", "raw")
 

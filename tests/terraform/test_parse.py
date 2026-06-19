@@ -29,9 +29,13 @@ def write_tf(dir_: Path, filename: str, content: str) -> Path:
 
 def test_root_module_node_is_created(tmp_path: Path) -> None:
     """parse_root always yields the root TerraformModule node."""
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         resource "null_resource" "example" {}
-    """)
+    """,
+    )
     result = parse_root(tmp_path, workspace="test-ws", repo_root=tmp_path.parent)
     assert any(isinstance(n, TerraformModule) for n in result.modules)
     root_mod = result.modules[0]
@@ -46,11 +50,15 @@ def test_root_module_node_is_created(tmp_path: Path) -> None:
 
 def test_resource_block_produces_resource_node_and_declares_edge(tmp_path: Path) -> None:
     """A resource block produces a Resource node and a DECLARES edge."""
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         resource "aws_s3_bucket" "my_bucket" {
           bucket = "my-unique-bucket-name"
         }
-    """)
+    """,
+    )
     result = parse_root(tmp_path, workspace="ws", repo_root=tmp_path.parent)
 
     # Resource node
@@ -82,11 +90,15 @@ def test_module_block_produces_child_module_and_calls_edge(tmp_path: Path) -> No
     child_dir.mkdir(parents=True)
     write_tf(child_dir, "main.tf", "# child module")
 
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         module "vpc" {
           source = "./modules/vpc"
         }
-    """)
+    """,
+    )
     repo_root = tmp_path.parent
     result = parse_root(tmp_path, workspace="ws", repo_root=repo_root)
 
@@ -109,7 +121,10 @@ def test_module_block_produces_child_module_and_calls_edge(tmp_path: Path) -> No
 
 def test_interpolation_creates_depends_on_edge(tmp_path: Path) -> None:
     """String interpolation like ${aws_security_group.sg.id} creates a DEPENDS_ON edge."""
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         resource "aws_security_group" "sg" {
           name = "my-sg"
         }
@@ -119,7 +134,8 @@ def test_interpolation_creates_depends_on_edge(tmp_path: Path) -> None:
           instance_type = "t3.micro"
           vpc_security_group_ids = ["${aws_security_group.sg.id}"]
         }
-    """)
+    """,
+    )
     result = parse_root(tmp_path, workspace="ws", repo_root=tmp_path.parent)
 
     depends_on_edges = [e for e in result.edges if e.rel_type == "DEPENDS_ON"]
@@ -138,7 +154,10 @@ def test_interpolation_creates_depends_on_edge(tmp_path: Path) -> None:
 
 def test_explicit_depends_on_creates_edge(tmp_path: Path) -> None:
     """Explicit depends_on = [resource_type.resource_name] creates a DEPENDS_ON edge."""
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         resource "aws_iam_role" "role" {
           name = "my-role"
         }
@@ -148,7 +167,8 @@ def test_explicit_depends_on_creates_edge(tmp_path: Path) -> None:
           instance_type = "t3.micro"
           depends_on    = ["aws_iam_role.role"]
         }
-    """)
+    """,
+    )
     result = parse_root(tmp_path, workspace="ws", repo_root=tmp_path.parent)
 
     depends_on_edges = [e for e in result.edges if e.rel_type == "DEPENDS_ON"]
@@ -177,7 +197,10 @@ def test_empty_root_produces_only_root_module(tmp_path: Path) -> None:
 
 def test_multiple_resources_all_extracted(tmp_path: Path) -> None:
     """All resource blocks in a file are extracted as separate Resource nodes."""
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         resource "aws_s3_bucket" "bucket_a" {
           bucket = "bucket-a"
         }
@@ -189,7 +212,8 @@ def test_multiple_resources_all_extracted(tmp_path: Path) -> None:
         resource "aws_dynamodb_table" "table" {
           name = "my-table"
         }
-    """)
+    """,
+    )
     result = parse_root(tmp_path, workspace="ws", repo_root=tmp_path.parent)
 
     resources = result.resources
@@ -211,7 +235,9 @@ def test_multiple_resources_all_extracted(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parsing_requires_no_terraform_binary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_parsing_requires_no_terraform_binary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """parse_root must not invoke any subprocess (no terraform init/plan)."""
     import subprocess
 
@@ -224,11 +250,15 @@ def test_parsing_requires_no_terraform_binary(tmp_path: Path, monkeypatch: pytes
 
     monkeypatch.setattr(subprocess, "run", fail_if_terraform)
 
-    write_tf(tmp_path, "main.tf", """\
+    write_tf(
+        tmp_path,
+        "main.tf",
+        """\
         resource "aws_s3_bucket" "test" {
           bucket = "static-test"
         }
-    """)
+    """,
+    )
     # This must not raise — i.e., no terraform subprocess is called.
     result = parse_root(tmp_path, workspace="ws", repo_root=tmp_path.parent)
     assert len(result.resources) == 1
