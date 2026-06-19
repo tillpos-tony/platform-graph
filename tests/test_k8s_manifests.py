@@ -1,4 +1,4 @@
-"""Tests for graphsearch.k8s.manifests — raw K8s manifest folder reader.
+"""Tests for platform_graph.k8s.manifests — raw K8s manifest folder reader.
 
 Covers all acceptance criteria from docs/issues/0001-index-raw-manifest-folders.md:
 - Config round-trip and default
@@ -17,10 +17,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from graphsearch.config import GraphsearchConfig, load_config, write_config
-from graphsearch.k8s.index import _env_from_path, _index_docs, _resolve_paths
-from graphsearch.k8s.manifests import read_manifests
-from graphsearch.k8s.parse import parse_resources
+from platform_graph.config import PlatformGraphConfig, load_config, write_config
+from platform_graph.k8s.index import _env_from_path, _index_docs, _resolve_paths
+from platform_graph.k8s.manifests import read_manifests
+from platform_graph.k8s.parse import parse_resources
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -79,7 +79,7 @@ _CONFIGMAP = textwrap.dedent("""\
 class TestConfigRoundTrip:
     def test_k8s_manifests_defaults_to_empty_list(self, tmp_path: Path) -> None:
         """load_config returns [] for k8s_manifests when key is absent."""
-        config_path = tmp_path / ".graphsearch.toml"
+        config_path = tmp_path / ".platform-graph.toml"
         config_path.write_text('workspace = "test"\nbolt_uri = "bolt://127.0.0.1:7687"\n')
 
         result = load_config(tmp_path)
@@ -87,8 +87,8 @@ class TestConfigRoundTrip:
         assert result.k8s_manifests == []
 
     def test_k8s_manifests_loaded_from_toml(self, tmp_path: Path) -> None:
-        """load_config reads k8s_manifests list from .graphsearch.toml."""
-        config_path = tmp_path / ".graphsearch.toml"
+        """load_config reads k8s_manifests list from .platform-graph.toml."""
+        config_path = tmp_path / ".platform-graph.toml"
         config_path.write_text(
             'workspace = "test"\n'
             'bolt_uri = "bolt://127.0.0.1:7687"\n'
@@ -101,7 +101,7 @@ class TestConfigRoundTrip:
 
     def test_write_config_round_trips_k8s_manifests(self, tmp_path: Path) -> None:
         """write_config writes k8s_manifests and load_config reads it back."""
-        config = GraphsearchConfig(
+        config = PlatformGraphConfig(
             workspace="test",
             bolt_uri="bolt://127.0.0.1:7687",
             k8s_manifests=["manifests/prod", "manifests/staging"],
@@ -114,15 +114,15 @@ class TestConfigRoundTrip:
 
     def test_write_config_empty_k8s_manifests(self, tmp_path: Path) -> None:
         """write_config writes k8s_manifests = [] when empty."""
-        config = GraphsearchConfig(workspace="test")
+        config = PlatformGraphConfig(workspace="test")
         write_config(config, tmp_path)
-        text = (tmp_path / ".graphsearch.toml").read_text()
+        text = (tmp_path / ".platform-graph.toml").read_text()
 
         assert "k8s_manifests = []" in text
 
     def test_write_config_preserves_existing_k8s_overlays(self, tmp_path: Path) -> None:
         """write_config round-trips both k8s_overlays and k8s_manifests."""
-        config = GraphsearchConfig(
+        config = PlatformGraphConfig(
             workspace="test",
             k8s_overlays=["k8s/overlays/prod"],
             k8s_manifests=["k8s/raw/prod"],
@@ -443,7 +443,7 @@ class TestRenderVsRawParity:
         raw_docs = read_manifests(tmp_path)
 
         # Simulate what render_overlay would return for the same resource
-        from graphsearch.k8s.render import render_overlay
+        from platform_graph.k8s.render import render_overlay
 
         mock_result = MagicMock()
         mock_result.returncode = 0
@@ -470,8 +470,8 @@ class TestRenderVsRawParity:
         mock_session = MagicMock()
 
         with (
-            patch("graphsearch.k8s.index.upsert_node") as mock_upsert_node,
-            patch("graphsearch.k8s.index.upsert_edge") as mock_upsert_edge,
+            patch("platform_graph.k8s.index.upsert_node") as mock_upsert_node,
+            patch("platform_graph.k8s.index.upsert_edge") as mock_upsert_edge,
         ):
             _index_docs(docs, "ws", "prod", mock_session, source_label="test")
 
@@ -490,9 +490,9 @@ class TestCmdIndexNothingToIndexGuard:
         self, tmp_path: Path, capsys: pytest.CaptureFixture
     ) -> None:
         """cmd_index exits 0 with a message when all source lists are empty."""
-        from graphsearch.cli import cmd_index
+        from platform_graph.cli import cmd_index
 
-        config_path = tmp_path / ".graphsearch.toml"
+        config_path = tmp_path / ".platform-graph.toml"
         config_path.write_text(
             'workspace = "test"\n'
             'bolt_uri = "bolt://127.0.0.1:7687"\n'
@@ -501,7 +501,7 @@ class TestCmdIndexNothingToIndexGuard:
             "terraform_roots = []\n"
         )
 
-        with patch("graphsearch.cli._git_root", return_value=tmp_path):
+        with patch("platform_graph.cli._git_root", return_value=tmp_path):
             result = cmd_index(MagicMock())
 
         assert result == 0
@@ -510,9 +510,9 @@ class TestCmdIndexNothingToIndexGuard:
 
     def test_runs_when_only_k8s_manifests_configured(self, tmp_path: Path) -> None:
         """cmd_index proceeds past the guard when only k8s_manifests is set."""
-        from graphsearch.cli import cmd_index
+        from platform_graph.cli import cmd_index
 
-        config_path = tmp_path / ".graphsearch.toml"
+        config_path = tmp_path / ".platform-graph.toml"
         config_path.write_text(
             'workspace = "test"\n'
             'bolt_uri = "bolt://127.0.0.1:7687"\n'
@@ -522,9 +522,9 @@ class TestCmdIndexNothingToIndexGuard:
         )
 
         with (
-            patch("graphsearch.cli._git_root", return_value=tmp_path),
-            patch("graphsearch.cli.connect") as mock_connect,
-            patch("graphsearch.cli.index_k8s") as mock_index_k8s,
+            patch("platform_graph.cli._git_root", return_value=tmp_path),
+            patch("platform_graph.cli.connect") as mock_connect,
+            patch("platform_graph.cli.index_k8s") as mock_index_k8s,
         ):
             mock_driver = MagicMock()
             mock_connect.return_value = mock_driver

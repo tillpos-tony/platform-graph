@@ -1,4 +1,4 @@
-"""Tests for graphsearch.k8s.topology — scheduling/topology node and edge derivation.
+"""Tests for platform_graph.k8s.topology — scheduling/topology node and edge derivation.
 
 Covers:
 - nodeSelector → NodePool node and SCHEDULES_ON edge (one per key=value pair)
@@ -14,8 +14,10 @@ Covers:
 
 from __future__ import annotations
 
-from graphsearch.k8s.topology import derive_topology_edges
-from graphsearch.model import K8sResource, NodePool, TopologyKey
+import pytest
+
+from platform_graph.k8s.topology import derive_topology_edges
+from platform_graph.model import K8sResource, NodePool, TopologyKey
 
 WS = "my-workspace"
 ENV = "prod"
@@ -505,7 +507,7 @@ class TestNonWorkloadIgnored:
 
 class TestIntegrationWithParseResources:
     def test_parse_resources_includes_topology_nodes_and_edges(self) -> None:
-        from graphsearch.k8s.parse import parse_resources
+        from platform_graph.k8s.parse import parse_resources
 
         docs = [
             _deployment(
@@ -527,7 +529,7 @@ class TestIntegrationWithParseResources:
         assert len(spread) == 1
 
     def test_parse_resources_anti_affinity_and_structural_coexist(self) -> None:
-        from graphsearch.k8s.parse import parse_resources
+        from platform_graph.k8s.parse import parse_resources
 
         docs = [
             _deployment("db", pod_labels={"app": "db"}),
@@ -556,7 +558,7 @@ class TestIntegrationWithParseResources:
         assert "SELECTS" in rel_types
 
     def test_all_scheduling_edge_types_present(self) -> None:
-        from graphsearch.k8s.parse import parse_resources
+        from platform_graph.k8s.parse import parse_resources
 
         docs = [
             _deployment("target", pod_labels={"app": "target"}),

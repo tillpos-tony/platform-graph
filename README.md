@@ -1,27 +1,27 @@
-# graphsearch
+# platform-graph
 
 Index and query codebase relationships in Memgraph.
 
 ## Install
 
 ```bash
-pipx install ./graphsearch
+pipx install .
 ```
 
 ## Usage
 
 ```bash
-# One-time setup: write .graphsearch.toml
-graphsearch init
+# One-time setup: write .platform-graph.toml
+platform-graph init
 
 # Index the workspace into Memgraph
-graphsearch index
+platform-graph index
 
 # Query: list all indexed workspaces
-graphsearch query list-workspaces
+platform-graph query list-workspaces
 
 # Query: blast radius from a workload (all reachable targets via CAN_REACH)
-graphsearch query blast-radius \
+platform-graph query blast-radius \
   --param workspace=my-repo \
   --param env=prod \
   --param kind=Deployment \
@@ -29,23 +29,23 @@ graphsearch query blast-radius \
   --param name=api
 
 # Query: which workloads can reach a given RBAC capability
-graphsearch query who-can-reach-capability \
+platform-graph query who-can-reach-capability \
   --param resource=secrets \
   --param verb=get
 
 # Query: all explicit network-reachability edges
-graphsearch query network-reachability
+platform-graph query network-reachability
 
 # Query: raw Cypher
-graphsearch query cypher --cypher "MATCH (n:K8sResource) RETURN n.name LIMIT 10"
+platform-graph query cypher --cypher "MATCH (n:K8sResource) RETURN n.name LIMIT 10"
 
 # Output as JSON
-graphsearch query list-workspaces --json-output
+platform-graph query list-workspaces --json-output
 ```
 
 ## Config
 
-`graphsearch init` writes `.graphsearch.toml` at the repo root:
+`platform-graph init` writes `.platform-graph.toml` at the repo root:
 
 ```toml
 workspace = "my-repo"

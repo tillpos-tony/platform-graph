@@ -28,7 +28,7 @@ Design notes
 
 from __future__ import annotations
 
-from graphsearch.model import Edge, K8sResource, NodePool, TopologyKey
+from platform_graph.model import Edge, K8sResource, NodePool, TopologyKey
 
 # Kinds that have a pod template (spec.template.spec)
 _WORKLOAD_KINDS = {"Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"}
@@ -51,7 +51,7 @@ def derive_topology_edges(
     resources:
         Raw resource dicts (already rendered from a Kustomize overlay).
     workspace:
-        Workspace name (from .graphsearch.toml).
+        Workspace name (from .platform-graph.toml).
     env:
         Env tag derived from the overlay path (e.g. "prod", "staging").
 

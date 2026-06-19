@@ -20,7 +20,7 @@ from typing import Any
 
 import hcl2
 
-from graphsearch.model import Edge, Resource, TerraformModule
+from platform_graph.model import Edge, Resource, TerraformModule
 
 # Matches Terraform interpolation references: ${<type>.<name>.<attr>}
 # We extract (resource_type, resource_name) from the first two dot-separated

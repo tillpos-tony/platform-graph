@@ -1,15 +1,15 @@
-"""graphsearch CLI entry point.
+"""platform-graph CLI entry point.
 
 Subcommands
 -----------
-init    Write .graphsearch.toml with prompts. Does not clobber an existing file.
+init    Write .platform-graph.toml with prompts. Does not clobber an existing file.
 index   Read config and index the workspace into Memgraph.
 query   Read config and query the graph.
 
 Query modes
 -----------
-graphsearch query <named-query> [--param key=value ...] [--json-output]
-graphsearch query cypher --cypher "MATCH ... RETURN ..." [--json-output]
+platform-graph query <named-query> [--param key=value ...] [--json-output]
+platform-graph query cypher --cypher "MATCH ... RETURN ..." [--json-output]
 """
 
 from __future__ import annotations
@@ -20,10 +20,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from graphsearch.config import GraphsearchConfig, load_config, write_config
-from graphsearch.db import connect
-from graphsearch.k8s.index import index_k8s
-from graphsearch.terraform.index import index_terraform
+from platform_graph.config import PlatformGraphConfig, load_config, write_config
+from platform_graph.db import connect
+from platform_graph.k8s.index import index_k8s
+from platform_graph.terraform.index import index_terraform
 
 # ---------------------------------------------------------------------------
 # Subcommand: init
@@ -31,19 +31,19 @@ from graphsearch.terraform.index import index_terraform
 
 
 def cmd_init(args: argparse.Namespace) -> int:
-    """Interactively write .graphsearch.toml, refusing to clobber an existing file."""
+    """Interactively write .platform-graph.toml, refusing to clobber an existing file."""
     repo_root = _git_root()
-    config_path = repo_root / ".graphsearch.toml"
+    config_path = repo_root / ".platform-graph.toml"
 
     if config_path.exists():
         print(
-            f"graphsearch init: {config_path} already exists. "
+            f"platform-graph init: {config_path} already exists. "
             "Delete it first if you want to reinitialise.",
             file=sys.stderr,
         )
         return 1
 
-    print("graphsearch init — setting up this workspace.")
+    print("platform-graph init — setting up this workspace.")
     print()
 
     workspace = input(f"Workspace name [{repo_root.name}]: ").strip() or repo_root.name
@@ -63,7 +63,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     tf_raw = input("> ").strip()
     terraform_roots = [p.strip() for p in tf_raw.split(",") if p.strip()] if tf_raw else []
 
-    config = GraphsearchConfig(
+    config = PlatformGraphConfig(
         workspace=workspace,
         bolt_uri=bolt_uri,
         k8s_overlays=k8s_overlays,
@@ -73,7 +73,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     written = write_config(config, repo_root)
 
     print()
-    print(f"graphsearch init: config written to {written}")
+    print(f"platform-graph init: config written to {written}")
     print(f"  workspace       = {workspace}")
     print(f"  bolt_uri        = {bolt_uri}")
     print(f"  k8s_overlays    = {k8s_overlays}")
@@ -94,16 +94,17 @@ def cmd_index(args: argparse.Namespace) -> int:
 
     if config is None:
         print(
-            "graphsearch index: no .graphsearch.toml found. Run `graphsearch init` first.",
+            "platform-graph index: no .platform-graph.toml found. "
+            "Run `platform-graph init` first.",
             file=sys.stderr,
         )
         return 1
 
-    print(f"graphsearch index: workspace={config.workspace!r}")
+    print(f"platform-graph index: workspace={config.workspace!r}")
 
     if not config.terraform_roots and not config.k8s_overlays and not config.k8s_manifests:
         print(
-            "graphsearch index: nothing to index "
+            "platform-graph index: nothing to index "
             "(no terraform_roots, k8s_overlays, or k8s_manifests configured)."
         )
         return 0
@@ -118,7 +119,7 @@ def cmd_index(args: argparse.Namespace) -> int:
     finally:
         driver.close()
 
-    print("graphsearch index: done.")
+    print("platform-graph index: done.")
     return 0
 
 
@@ -165,14 +166,15 @@ def _print_results(rows: list[dict], json_output: bool) -> None:
 
 def cmd_query(args: argparse.Namespace) -> int:
     """Query the graph: named query or raw Cypher."""
-    from graphsearch.queries import REGISTRY, run_named
+    from platform_graph.queries import REGISTRY, run_named
 
     repo_root = _git_root()
     config = load_config(repo_root)
 
     if config is None:
         print(
-            "graphsearch query: no .graphsearch.toml found. Run `graphsearch init` first.",
+            "platform-graph query: no .platform-graph.toml found. "
+            "Run `platform-graph init` first.",
             file=sys.stderr,
         )
         return 1
@@ -185,7 +187,7 @@ def cmd_query(args: argparse.Namespace) -> int:
         cypher_stmt: str | None = getattr(args, "cypher", None)
         if not cypher_stmt:
             print(
-                "graphsearch query cypher: --cypher <statement> is required.",
+                "platform-graph query cypher: --cypher <statement> is required.",
                 file=sys.stderr,
             )
             return 1
@@ -193,7 +195,7 @@ def cmd_query(args: argparse.Namespace) -> int:
             driver = connect(config.bolt_uri)
         except Exception as exc:
             print(
-                f"graphsearch query: cannot connect to Memgraph at {config.bolt_uri!r}: {exc}",
+                f"platform-graph query: cannot connect to Memgraph at {config.bolt_uri!r}: {exc}",
                 file=sys.stderr,
             )
             return 1
@@ -210,9 +212,9 @@ def cmd_query(args: argparse.Namespace) -> int:
     if query_name not in REGISTRY:
         available = ", ".join(sorted(REGISTRY))
         print(
-            f"graphsearch query: unknown query {query_name!r}.\n"
+            f"platform-graph query: unknown query {query_name!r}.\n"
             f"Available named queries: {available}\n"
-            f"Or use: graphsearch query cypher --cypher '...'",
+            f"Or use: platform-graph query cypher --cypher '...'",
             file=sys.stderr,
         )
         return 1
@@ -220,14 +222,14 @@ def cmd_query(args: argparse.Namespace) -> int:
     try:
         params = _parse_params(getattr(args, "param", None) or [])
     except ValueError as exc:
-        print(f"graphsearch query: {exc}", file=sys.stderr)
+        print(f"platform-graph query: {exc}", file=sys.stderr)
         return 1
 
     try:
         driver = connect(config.bolt_uri)
     except Exception as exc:
         print(
-            f"graphsearch query: cannot connect to Memgraph at {config.bolt_uri!r}: {exc}",
+            f"platform-graph query: cannot connect to Memgraph at {config.bolt_uri!r}: {exc}",
             file=sys.stderr,
         )
         return 1
@@ -237,7 +239,7 @@ def cmd_query(args: argparse.Namespace) -> int:
             try:
                 rows = run_named(session, query_name, params)
             except ValueError as exc:
-                print(f"graphsearch query: {exc}", file=sys.stderr)
+                print(f"platform-graph query: {exc}", file=sys.stderr)
                 return 1
     finally:
         driver.close()
@@ -272,14 +274,14 @@ def _git_root() -> Path:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        prog="graphsearch",
+        prog="platform-graph",
         description="Index and query codebase relationships in Memgraph.",
     )
     sub = parser.add_subparsers(dest="command", metavar="<command>")
     sub.required = True
 
     # init
-    init_p = sub.add_parser("init", help="Write .graphsearch.toml for this workspace.")
+    init_p = sub.add_parser("init", help="Write .platform-graph.toml for this workspace.")
     init_p.set_defaults(func=cmd_init)
 
     # index
@@ -294,7 +296,7 @@ def main(argv: list[str] | None = None) -> None:
             "Run a named query or raw Cypher against the indexed graph.\n\n"
             "Named queries: list-workspaces, blast-radius, who-can-reach-capability, "
             "network-reachability\n\n"
-            "Raw Cypher: graphsearch query cypher --cypher 'MATCH (n) RETURN n LIMIT 5'"
+            "Raw Cypher: platform-graph query cypher --cypher 'MATCH (n) RETURN n LIMIT 5'"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

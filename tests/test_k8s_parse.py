@@ -1,8 +1,8 @@
-"""Tests for graphsearch.k8s.parse — node and edge extraction from K8s YAML."""
+"""Tests for platform_graph.k8s.parse — node and edge extraction from K8s YAML."""
 
 from __future__ import annotations
 
-from graphsearch.k8s.parse import parse_resources, resource_key
+from platform_graph.k8s.parse import parse_resources, resource_key
 
 # ---------------------------------------------------------------------------
 # Helpers / fixtures

@@ -1,4 +1,4 @@
-"""Raw K8s manifest folder reader for graphsearch.
+"""Raw K8s manifest folder reader for platform-graph.
 
 Reads a directory tree of hand-written Kubernetes YAML directly — no kustomize
 build, no subprocess.  The caller receives the same list-of-dicts shape that

@@ -1,4 +1,4 @@
-"""Config loader for .graphsearch.toml.
+"""Config loader for .platform-graph.toml.
 
 Reads the per-repo config file from the repo root. A missing file is not an
 error — callers receive None and should treat it as a no-op.
@@ -12,8 +12,8 @@ from pathlib import Path
 
 
 @dataclass
-class GraphsearchConfig:
-    """Parsed contents of a .graphsearch.toml file."""
+class PlatformGraphConfig:
+    """Parsed contents of a .platform-graph.toml file."""
 
     workspace: str
     bolt_uri: str = "bolt://127.0.0.1:7687"
@@ -22,14 +22,14 @@ class GraphsearchConfig:
     terraform_roots: list[str] = field(default_factory=list)
 
 
-def load_config(repo_root: Path | None = None) -> GraphsearchConfig | None:
-    """Load .graphsearch.toml from *repo_root* (or the current directory).
+def load_config(repo_root: Path | None = None) -> PlatformGraphConfig | None:
+    """Load .platform-graph.toml from *repo_root* (or the current directory).
 
     Returns None — silently, without raising — if the file does not exist.
     Raises tomllib.TOMLDecodeError if the file exists but is malformed.
     """
     root = repo_root or Path.cwd()
-    config_path = root / ".graphsearch.toml"
+    config_path = root / ".platform-graph.toml"
 
     if not config_path.exists():
         return None
@@ -37,7 +37,7 @@ def load_config(repo_root: Path | None = None) -> GraphsearchConfig | None:
     with config_path.open("rb") as f:
         raw = tomllib.load(f)
 
-    return GraphsearchConfig(
+    return PlatformGraphConfig(
         workspace=raw["workspace"],
         bolt_uri=raw.get("bolt_uri", "bolt://127.0.0.1:7687"),
         k8s_overlays=raw.get("k8s_overlays", []),
@@ -46,13 +46,13 @@ def load_config(repo_root: Path | None = None) -> GraphsearchConfig | None:
     )
 
 
-def write_config(config: GraphsearchConfig, repo_root: Path | None = None) -> Path:
-    """Write *config* to .graphsearch.toml in *repo_root*.
+def write_config(config: PlatformGraphConfig, repo_root: Path | None = None) -> Path:
+    """Write *config* to .platform-graph.toml in *repo_root*.
 
     Returns the path that was written.
     """
     root = repo_root or Path.cwd()
-    config_path = root / ".graphsearch.toml"
+    config_path = root / ".platform-graph.toml"
 
     lines = [
         f'workspace = "{config.workspace}"\n',

@@ -1,4 +1,4 @@
-"""Parse rendered K8s YAML into graphsearch node and edge objects.
+"""Parse rendered K8s YAML into platform-graph node and edge objects.
 
 Produced nodes
 --------------
@@ -38,10 +38,10 @@ Produced edges (scheduling / topology slice)
 
 from __future__ import annotations
 
-from graphsearch.k8s.network import derive_network_edges
-from graphsearch.k8s.rbac import derive_rbac_edges
-from graphsearch.k8s.topology import derive_topology_edges
-from graphsearch.model import Edge, K8sResource
+from platform_graph.k8s.network import derive_network_edges
+from platform_graph.k8s.rbac import derive_rbac_edges
+from platform_graph.k8s.topology import derive_topology_edges
+from platform_graph.model import Edge, K8sResource
 
 # Kinds that have a pod template (spec.template.spec)
 _WORKLOAD_KINDS = {"Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"}
@@ -70,14 +70,14 @@ def parse_resources(
     workspace: str,
     env: str,
 ) -> tuple[list, list[Edge]]:
-    """Parse *docs* into graphsearch nodes and structural edges.
+    """Parse *docs* into platform-graph nodes and structural edges.
 
     Parameters
     ----------
     docs:
         Resource dicts from ``render_overlay``.
     workspace:
-        Workspace name (from .graphsearch.toml).
+        Workspace name (from .platform-graph.toml).
     env:
         Env tag derived from the overlay path (e.g. "prod", "staging").
 
