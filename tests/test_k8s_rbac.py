@@ -13,8 +13,6 @@ Covers:
 
 from __future__ import annotations
 
-import pytest
-
 from graphsearch.k8s.rbac import (
     _COMMON_VERBS,
     _expand_verbs,
@@ -188,7 +186,7 @@ class TestRoleAllowsEdges:
                 rules=[_rule([""], ["secrets"], ["get", "list"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 2
         verbs = {e.to_node.verb for e in allows}
@@ -202,34 +200,34 @@ class TestRoleAllowsEdges:
                 rules=[_rule([""], ["secrets"], ["*"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         verbs = {e.to_node.verb for e in allows}
         assert verbs == set(_COMMON_VERBS)
 
     def test_multiple_resources_produce_separate_permissions(self) -> None:
-        """2 resources × 1 verb = 2 ApiPermission hubs."""
+        """2 resources x 1 verb = 2 ApiPermission hubs."""
         docs = [
             _role(
                 "read-config",
                 rules=[_rule([""], ["configmaps", "secrets"], ["get"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 2
         resources = {e.to_node.resource for e in allows}
         assert resources == {"configmaps", "secrets"}
 
     def test_multiple_api_groups_produce_separate_permissions(self) -> None:
-        """2 groups × 1 resource × 1 verb = 2 ApiPermission hubs."""
+        """2 groups x 1 resource x 1 verb = 2 ApiPermission hubs."""
         docs = [
             _role(
                 "read-pods",
                 rules=[_rule(["", "apps"], ["pods"], ["get"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 2
         groups = {e.to_node.api_group for e in allows}
@@ -243,7 +241,7 @@ class TestRoleAllowsEdges:
                 rules=[_rule([""], ["secrets"], ["get"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 1
         assert isinstance(allows[0].from_node, Role)
@@ -260,7 +258,7 @@ class TestRoleAllowsEdges:
                 rules=[_rule([""], ["secrets"], ["get"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         perm = allows[0].to_node
         assert "workspace" not in perm.identity_props
@@ -273,13 +271,13 @@ class TestRoleAllowsEdges:
                 rules=[_rule([""], ["pods"], ["get", "list"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 2
 
     def test_role_with_no_rules_produces_no_allows_edges(self) -> None:
         docs = [_role("empty-role", rules=[])]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         assert _allows_edges(edges) == []
 
     def test_multiple_rules_accumulate(self) -> None:
@@ -293,7 +291,7 @@ class TestRoleAllowsEdges:
                 ],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 3  # 1 + 2
 
@@ -305,7 +303,7 @@ class TestRoleAllowsEdges:
                 rules=[_rule([""], ["*"], ["get"])],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         allows = _allows_edges(edges)
         assert len(allows) == 1
         assert allows[0].to_node.resource == "*"
@@ -328,7 +326,7 @@ class TestRoleBindingGrantsEdge:
                 subjects=[_sa_subject("my-sa")],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         grants = _grants_edges(edges)
         assert len(grants) == 1
         assert isinstance(grants[0].from_node, RoleBinding)
@@ -350,7 +348,7 @@ class TestRoleBindingGrantsEdge:
                 subjects=[_sa_subject("my-sa", "default")],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         grants = _grants_edges(edges)
         assert len(grants) == 1
         assert grants[0].to_node.name == "cluster-reader"
@@ -366,7 +364,7 @@ class TestRoleBindingGrantsEdge:
                 subjects=[_sa_subject("my-sa")],
             )
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         assert _grants_edges(edges) == []
 
 
@@ -387,7 +385,7 @@ class TestRoleBindingSubjectEdges:
                 subjects=[_sa_subject("my-sa")],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         subjects = _subject_edges(edges)
         assert len(subjects) == 1
         assert isinstance(subjects[0].from_node, RoleBinding)
@@ -407,7 +405,7 @@ class TestRoleBindingSubjectEdges:
                 ],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         subjects = _subject_edges(edges)
         assert len(subjects) == 2
         sa_names = {e.to_node.name for e in subjects}
@@ -428,7 +426,7 @@ class TestRoleBindingSubjectEdges:
                 ],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         subjects = _subject_edges(edges)
         assert len(subjects) == 1
         assert subjects[0].to_node.name == "my-sa"
@@ -443,7 +441,7 @@ class TestRoleBindingSubjectEdges:
                 subjects=[],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        _nodes, edges = derive_rbac_edges(docs, WS, ENV)
         assert _subject_edges(edges) == []
 
     def test_service_account_node_carries_workspace(self) -> None:
@@ -457,7 +455,7 @@ class TestRoleBindingSubjectEdges:
                 subjects=[_sa_subject("my-sa")],
             ),
         ]
-        nodes, edges = derive_rbac_edges(docs, WS, ENV)
+        nodes, _edges = derive_rbac_edges(docs, WS, ENV)
         sa_nodes = [n for n in nodes if isinstance(n, ServiceAccount)]
         assert len(sa_nodes) == 1
         assert sa_nodes[0].workspace == WS
@@ -517,7 +515,11 @@ class TestFullBindingChain:
         """Pods, Services, etc. are silently skipped."""
         docs = [
             {"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "p", "namespace": "default"}},
-            {"apiVersion": "v1", "kind": "Service", "metadata": {"name": "svc", "namespace": "default"}},
+            {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {"name": "svc", "namespace": "default"},
+            },
         ]
         nodes, edges = derive_rbac_edges(docs, WS, ENV)
         assert nodes == []
@@ -615,7 +617,7 @@ class TestIntegrationWithParseResources:
                 subjects=[_sa_subject("app-sa")],
             ),
         ]
-        nodes, edges = parse_resources(docs, WS, ENV)
+        _nodes, edges = parse_resources(docs, WS, ENV)
 
         rel_types = {e.rel_type for e in edges}
         assert "USES_SA" in rel_types
