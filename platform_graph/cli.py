@@ -49,15 +49,17 @@ def cmd_init(args: argparse.Namespace) -> int:
     workspace = input(f"Workspace name [{repo_root.name}]: ").strip() or repo_root.name
     bolt_uri = input("Bolt URI [bolt://127.0.0.1:7687]: ").strip() or "bolt://127.0.0.1:7687"
 
-    print(
-        "K8s overlay paths (comma-separated, relative to repo root, leave blank to skip):"
-    )
+    print("K8s overlay paths (comma-separated, relative to repo root, leave blank to skip):")
     k8s_raw = input("> ").strip()
     k8s_overlays = [p.strip() for p in k8s_raw.split(",") if p.strip()] if k8s_raw else []
 
-    print(
-        "Terraform root paths (comma-separated, relative to repo root, leave blank to skip):"
+    print("K8s raw manifest paths (comma-separated, relative to repo root, leave blank to skip):")
+    manifests_raw = input("> ").strip()
+    k8s_manifests = (
+        [p.strip() for p in manifests_raw.split(",") if p.strip()] if manifests_raw else []
     )
+
+    print("Terraform root paths (comma-separated, relative to repo root, leave blank to skip):")
     tf_raw = input("> ").strip()
     terraform_roots = [p.strip() for p in tf_raw.split(",") if p.strip()] if tf_raw else []
 
@@ -65,15 +67,17 @@ def cmd_init(args: argparse.Namespace) -> int:
         workspace=workspace,
         bolt_uri=bolt_uri,
         k8s_overlays=k8s_overlays,
+        k8s_manifests=k8s_manifests,
         terraform_roots=terraform_roots,
     )
     written = write_config(config, repo_root)
 
     print()
     print(f"platform-graph init: config written to {written}")
-    print(f"  workspace      = {workspace}")
-    print(f"  bolt_uri       = {bolt_uri}")
-    print(f"  k8s_overlays   = {k8s_overlays}")
+    print(f"  workspace       = {workspace}")
+    print(f"  bolt_uri        = {bolt_uri}")
+    print(f"  k8s_overlays    = {k8s_overlays}")
+    print(f"  k8s_manifests   = {k8s_manifests}")
     print(f"  terraform_roots = {terraform_roots}")
     return 0
 
@@ -98,8 +102,11 @@ def cmd_index(args: argparse.Namespace) -> int:
 
     print(f"platform-graph index: workspace={config.workspace!r}")
 
-    if not config.terraform_roots and not config.k8s_overlays:
-        print("platform-graph index: nothing to index (no terraform_roots or k8s_overlays configured).")
+    if not config.terraform_roots and not config.k8s_overlays and not config.k8s_manifests:
+        print(
+            "platform-graph index: nothing to index "
+            "(no terraform_roots, k8s_overlays, or k8s_manifests configured)."
+        )
         return 0
 
     driver = connect(config.bolt_uri)
@@ -107,7 +114,7 @@ def cmd_index(args: argparse.Namespace) -> int:
         with driver.session() as session:
             if config.terraform_roots:
                 index_terraform(config, session, repo_root)
-            if config.k8s_overlays:
+            if config.k8s_overlays or config.k8s_manifests:
                 index_k8s(config, session, repo_root)
     finally:
         driver.close()
@@ -144,8 +151,9 @@ def _print_results(rows: list[dict], json_output: bool) -> None:
 
     # Simple column-aligned table — no external dependency needed
     columns = list(rows[0].keys())
-    col_widths = {col: max(len(col), *(len(str(row.get(col, ""))) for row in rows))
-                  for col in columns}
+    col_widths = {
+        col: max(len(col), *(len(str(row.get(col, ""))) for row in rows)) for col in columns
+    }
 
     # Header
     header = "  ".join(col.ljust(col_widths[col]) for col in columns)
@@ -185,7 +193,7 @@ def cmd_query(args: argparse.Namespace) -> int:
             return 1
         try:
             driver = connect(config.bolt_uri)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(
                 f"platform-graph query: cannot connect to Memgraph at {config.bolt_uri!r}: {exc}",
                 file=sys.stderr,
@@ -219,7 +227,7 @@ def cmd_query(args: argparse.Namespace) -> int:
 
     try:
         driver = connect(config.bolt_uri)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(
             f"platform-graph query: cannot connect to Memgraph at {config.bolt_uri!r}: {exc}",
             file=sys.stderr,

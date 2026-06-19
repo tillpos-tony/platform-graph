@@ -188,9 +188,7 @@ def _selects_edges(
     considered.
     """
     svc_namespace = (svc_doc.get("metadata", {}) or {}).get("namespace", "")
-    selector: dict[str, str] = (
-        (svc_doc.get("spec", {}) or {}).get("selector") or {}
-    )
+    selector: dict[str, str] = (svc_doc.get("spec", {}) or {}).get("selector") or {}
     if not selector:
         return []
 

@@ -292,9 +292,7 @@ class TestMountsEdges:
 
     def test_mounts_configmap_from_env_from(self) -> None:
         deploy = _deployment("app")
-        deploy["spec"]["template"]["spec"]["envFrom"] = [
-            {"configMapRef": {"name": "app-config"}}
-        ]
+        deploy["spec"]["template"]["spec"]["envFrom"] = [{"configMapRef": {"name": "app-config"}}]
         docs = [deploy]
         _, edges = parse_resources(docs, WS, ENV)
         mounts = _edges_of_type(edges, "MOUNTS")
@@ -304,9 +302,7 @@ class TestMountsEdges:
 
     def test_mounts_secret_from_env_from(self) -> None:
         deploy = _deployment("app")
-        deploy["spec"]["template"]["spec"]["envFrom"] = [
-            {"secretRef": {"name": "app-secrets"}}
-        ]
+        deploy["spec"]["template"]["spec"]["envFrom"] = [{"secretRef": {"name": "app-secrets"}}]
         docs = [deploy]
         _, edges = parse_resources(docs, WS, ENV)
         mounts = _edges_of_type(edges, "MOUNTS")
@@ -319,9 +315,7 @@ class TestMountsEdges:
         deploy["spec"]["template"]["spec"]["volumes"] = [
             {"name": "v", "configMap": {"name": "shared-cm"}}
         ]
-        deploy["spec"]["template"]["spec"]["envFrom"] = [
-            {"configMapRef": {"name": "shared-cm"}}
-        ]
+        deploy["spec"]["template"]["spec"]["envFrom"] = [{"configMapRef": {"name": "shared-cm"}}]
         docs = [deploy]
         _, edges = parse_resources(docs, WS, ENV)
         mounts = _edges_of_type(edges, "MOUNTS")

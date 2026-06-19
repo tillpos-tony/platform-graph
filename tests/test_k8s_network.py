@@ -60,18 +60,12 @@ def _network_policy(
         "kind": "NetworkPolicy",
         "metadata": {"name": name, "namespace": namespace},
         "spec": {
-            "podSelector": (
-                {"matchLabels": pod_selector_labels} if pod_selector_labels else {}
-            ),
+            "podSelector": ({"matchLabels": pod_selector_labels} if pod_selector_labels else {}),
         },
     }
     if ingress_from_pod_selector is not None:
         doc["spec"]["ingress"] = [
-            {
-                "from": [
-                    {"podSelector": {"matchLabels": ingress_from_pod_selector}}
-                ]
-            }
+            {"from": [{"podSelector": {"matchLabels": ingress_from_pod_selector}}]}
         ]
     return doc
 
@@ -95,9 +89,7 @@ def _cilium_policy(
         "kind": "CiliumNetworkPolicy",
         "metadata": {"name": name, "namespace": namespace},
         "spec": {
-            "endpointSelector": {
-                "matchLabels": endpoint_selector_labels or {}
-            },
+            "endpointSelector": {"matchLabels": endpoint_selector_labels or {}},
             "egress": [egress_rule] if (to_fqdns or to_entities) else [],
         },
     }
@@ -213,7 +205,11 @@ class TestNetworkPolicyIngressAllow:
         """Documents that are not NetworkPolicy/CiliumNetworkPolicy are ignored."""
         docs = [
             _deployment("app", labels={"app": "app"}),
-            {"apiVersion": "v1", "kind": "Service", "metadata": {"name": "svc", "namespace": "default"}},
+            {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {"name": "svc", "namespace": "default"},
+            },
         ]
         edges = derive_network_edges(docs, WS, ENV)
         assert edges == []

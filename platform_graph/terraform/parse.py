@@ -29,7 +29,9 @@ _INTERP_RE = re.compile(r"\$\{([a-zA-Z][a-zA-Z0-9_]*)\.([a-zA-Z][a-zA-Z0-9_-]*)(
 
 # Also matches bare references without ${ }: resource_type.resource_name.attr
 # These appear in Terraform >=0.12 HCL2 expressions.
-_BARE_REF_RE = re.compile(r"\b([a-zA-Z][a-zA-Z0-9_]*)\.([a-zA-Z][a-zA-Z0-9_-]*)(?:\.[a-zA-Z][a-zA-Z0-9_]*)?\b")
+_BARE_REF_RE = re.compile(
+    r"\b([a-zA-Z][a-zA-Z0-9_]*)\.([a-zA-Z][a-zA-Z0-9_-]*)(?:\.[a-zA-Z][a-zA-Z0-9_]*)?\b"
+)
 
 # Keywords that look like type.name references but are NOT resource references.
 _NON_RESOURCE_PREFIXES = frozenset(
@@ -114,7 +116,6 @@ def parse_root(root_dir: Path, workspace: str, repo_root: Path) -> ParseResult:
     for block in raw_blocks:
         _extract_module_calls(block, root_module, workspace, repo_root, root_dir, result)
         _extract_resources(block, root_module, workspace, result)
-
 
     return result
 
@@ -310,7 +311,11 @@ def _find_existing_resource(
 ) -> Resource | None:
     """Return an already-declared Resource from *result* matching type+name, or None."""
     for r in result.resources:
-        if r.resource_type == resource_type and r.resource_name == resource_name and r.workspace == workspace:
+        if (
+            r.resource_type == resource_type
+            and r.resource_name == resource_name
+            and r.workspace == workspace
+        ):
             return r
     return None
 
@@ -322,6 +327,8 @@ def _find_or_create_resource(
     existing = _find_existing_resource(resource_type, resource_name, workspace, result)
     if existing is not None:
         return existing
-    new_node = Resource(workspace=workspace, resource_type=resource_type, resource_name=resource_name)
+    new_node = Resource(
+        workspace=workspace, resource_type=resource_type, resource_name=resource_name
+    )
     result.resources.append(new_node)
     return new_node

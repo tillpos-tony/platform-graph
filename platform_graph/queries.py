@@ -112,9 +112,7 @@ def run_named(session: Session, name: str, params: dict[str, str]) -> list[dict]
     Raises ValueError if any required parameter is missing.
     """
     if name not in REGISTRY:
-        raise KeyError(
-            f"Unknown query {name!r}. Available: {', '.join(sorted(REGISTRY))}"
-        )
+        raise KeyError(f"Unknown query {name!r}. Available: {', '.join(sorted(REGISTRY))}")
     fn, required = REGISTRY[name]
     missing = [k for k in required if k not in params]
     if missing:

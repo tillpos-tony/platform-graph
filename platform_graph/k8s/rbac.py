@@ -169,9 +169,7 @@ def _parse_role(
                         verb=verb,
                     )
                     api_permission_nodes.append(perm)
-                    allows_edges.append(
-                        Edge(from_node=role_node, to_node=perm, rel_type="ALLOWS")
-                    )
+                    allows_edges.append(Edge(from_node=role_node, to_node=perm, rel_type="ALLOWS"))
 
     return role_node, api_permission_nodes, allows_edges
 
@@ -240,9 +238,7 @@ def _parse_role_binding(
         ref_namespace = namespace if ref_kind == "Role" else ""
         role_node = role_index.get((ref_namespace, ref_name, ref_kind))
         if role_node is not None:
-            binding_edges.append(
-                Edge(from_node=binding_node, to_node=role_node, rel_type="GRANTS")
-            )
+            binding_edges.append(Edge(from_node=binding_node, to_node=role_node, rel_type="GRANTS"))
 
     # SUBJECT edges: RoleBinding → ServiceAccount (for ServiceAccount subjects)
     subjects = doc.get("subjects", []) or []
@@ -262,8 +258,6 @@ def _parse_role_binding(
             name=sa_name,
         )
         sa_nodes.append(sa_node)
-        binding_edges.append(
-            Edge(from_node=binding_node, to_node=sa_node, rel_type="SUBJECT")
-        )
+        binding_edges.append(Edge(from_node=binding_node, to_node=sa_node, rel_type="SUBJECT"))
 
     return binding_node, sa_nodes, binding_edges

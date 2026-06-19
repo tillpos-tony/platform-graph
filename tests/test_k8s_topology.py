@@ -133,12 +133,12 @@ class TestNodeSelector:
 
     def test_empty_node_selector_produces_no_edges(self) -> None:
         docs = [_deployment("app", node_selector={})]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "SCHEDULES_ON") == []
 
     def test_node_pool_identity_includes_workspace_and_env(self) -> None:
         docs = [_deployment("app", node_selector={"k": "v"})]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        nodes, _edges = derive_topology_edges(docs, WS, ENV)
         pool = next(n for n in nodes if isinstance(n, NodePool))
         assert pool.identity_props["workspace"] == WS
         assert pool.identity_props["env"] == ENV
@@ -169,11 +169,9 @@ class TestNodeAffinity:
         assert all(n.pool_key == "cloud.google.com/gke-nodepool" for n in pool_nodes)
 
     def test_non_in_operator_is_skipped(self) -> None:
-        affinity = _required_node_affinity(
-            [_match_expr("key", "NotIn", ["value"])]
-        )
+        affinity = _required_node_affinity([_match_expr("key", "NotIn", ["value"])])
         docs = [_deployment("app", node_affinity=affinity)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "SCHEDULES_ON") == []
 
     def test_multiple_terms_produce_all_edges(self) -> None:
@@ -187,7 +185,7 @@ class TestNodeAffinity:
             }
         }
         docs = [_deployment("app", node_affinity=affinity)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        nodes, _edges = derive_topology_edges(docs, WS, ENV)
         pool_nodes = [n for n in nodes if isinstance(n, NodePool)]
         assert len(pool_nodes) == 2
         values = {n.pool_value for n in pool_nodes}
@@ -201,7 +199,9 @@ class TestNodeAffinity:
 
 class TestTolerations:
     def test_key_value_toleration_produces_node_and_edge(self) -> None:
-        tolerations = [{"key": "dedicated", "value": "gpu", "operator": "Equal", "effect": "NoSchedule"}]
+        tolerations = [
+            {"key": "dedicated", "value": "gpu", "operator": "Equal", "effect": "NoSchedule"}
+        ]
         docs = [_deployment("app", tolerations=tolerations)]
         nodes, edges = derive_topology_edges(docs, WS, ENV)
 
@@ -217,13 +217,13 @@ class TestTolerations:
         """Exists-only tolerations (no value) produce no edge."""
         tolerations = [{"key": "dedicated", "operator": "Exists"}]
         docs = [_deployment("app", tolerations=tolerations)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "SCHEDULES_ON") == []
 
     def test_toleration_without_key_is_skipped(self) -> None:
         tolerations = [{"value": "some-value", "operator": "Equal"}]
         docs = [_deployment("app", tolerations=tolerations)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "SCHEDULES_ON") == []
 
     def test_mixed_tolerations_only_keyed_ones_produce_edges(self) -> None:
@@ -232,7 +232,7 @@ class TestTolerations:
             {"operator": "Exists"},  # no key, skip
         ]
         docs = [_deployment("app", tolerations=tolerations)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         schedules_on = _edges_of_type(edges, "SCHEDULES_ON")
         assert len(schedules_on) == 1
         assert schedules_on[0].to_node.pool_key == "dedicated"
@@ -246,7 +246,11 @@ class TestTolerations:
 class TestTopologySpread:
     def test_single_constraint_produces_topology_key_and_edge(self) -> None:
         constraints = [
-            {"maxSkew": 1, "topologyKey": "kubernetes.io/hostname", "whenUnsatisfiable": "DoNotSchedule"}
+            {
+                "maxSkew": 1,
+                "topologyKey": "kubernetes.io/hostname",
+                "whenUnsatisfiable": "DoNotSchedule",
+            }
         ]
         docs = [_deployment("app", topology_spread_constraints=constraints)]
         nodes, edges = derive_topology_edges(docs, WS, ENV)
@@ -280,7 +284,7 @@ class TestTopologySpread:
     def test_topology_key_identity_includes_workspace_env(self) -> None:
         constraints = [{"topologyKey": "kubernetes.io/hostname"}]
         docs = [_deployment("app", topology_spread_constraints=constraints)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        nodes, _edges = derive_topology_edges(docs, WS, ENV)
         tk = next(n for n in nodes if isinstance(n, TopologyKey))
         assert tk.identity_props["workspace"] == WS
         assert tk.identity_props["env"] == ENV
@@ -289,7 +293,7 @@ class TestTopologySpread:
     def test_constraint_without_topology_key_is_skipped(self) -> None:
         constraints = [{"maxSkew": 1, "whenUnsatisfiable": "DoNotSchedule"}]
         docs = [_deployment("app", topology_spread_constraints=constraints)]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "SPREAD_ACROSS") == []
 
 
@@ -315,7 +319,7 @@ class TestPodAntiAffinity:
                 },
             ),
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         anti = _edges_of_type(edges, "ANTI_AFFINITY")
 
         assert len(anti) == 1
@@ -341,7 +345,7 @@ class TestPodAntiAffinity:
                 },
             ),
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         anti = _edges_of_type(edges, "ANTI_AFFINITY")
 
         assert len(anti) == 1
@@ -364,7 +368,7 @@ class TestPodAntiAffinity:
                 },
             ),
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "ANTI_AFFINITY") == []
 
     def test_workload_not_anti_affinity_with_itself(self) -> None:
@@ -383,7 +387,7 @@ class TestPodAntiAffinity:
                 },
             )
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         # No self-edge
         anti = _edges_of_type(edges, "ANTI_AFFINITY")
         assert len(anti) == 0
@@ -403,7 +407,7 @@ class TestPodAntiAffinity:
                 },
             ),
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         assert _edges_of_type(edges, "ANTI_AFFINITY") == []
 
 
@@ -429,7 +433,7 @@ class TestPodAffinity:
                 },
             ),
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         co = _edges_of_type(edges, "CO_LOCATES_WITH")
 
         assert len(co) == 1
@@ -455,7 +459,7 @@ class TestPodAffinity:
                 },
             ),
         ]
-        nodes, edges = derive_topology_edges(docs, WS, ENV)
+        _nodes, edges = derive_topology_edges(docs, WS, ENV)
         co = _edges_of_type(edges, "CO_LOCATES_WITH")
 
         assert len(co) == 1
@@ -548,7 +552,7 @@ class TestIntegrationWithParseResources:
                 "spec": {"selector": {"app": "api"}},
             },
         ]
-        nodes, edges = parse_resources(docs, WS, ENV)
+        _nodes, edges = parse_resources(docs, WS, ENV)
         rel_types = {e.rel_type for e in edges}
         assert "ANTI_AFFINITY" in rel_types
         assert "SELECTS" in rel_types
@@ -582,7 +586,7 @@ class TestIntegrationWithParseResources:
                 },
             ),
         ]
-        nodes, edges = parse_resources(docs, WS, ENV)
+        _nodes, edges = parse_resources(docs, WS, ENV)
         rel_types = {e.rel_type for e in edges}
         assert "SCHEDULES_ON" in rel_types
         assert "SPREAD_ACROSS" in rel_types

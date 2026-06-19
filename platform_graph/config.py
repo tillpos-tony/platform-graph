@@ -18,6 +18,7 @@ class PlatformGraphConfig:
     workspace: str
     bolt_uri: str = "bolt://127.0.0.1:7687"
     k8s_overlays: list[str] = field(default_factory=list)
+    k8s_manifests: list[str] = field(default_factory=list)
     terraform_roots: list[str] = field(default_factory=list)
 
 
@@ -40,6 +41,7 @@ def load_config(repo_root: Path | None = None) -> PlatformGraphConfig | None:
         workspace=raw["workspace"],
         bolt_uri=raw.get("bolt_uri", "bolt://127.0.0.1:7687"),
         k8s_overlays=raw.get("k8s_overlays", []),
+        k8s_manifests=raw.get("k8s_manifests", []),
         terraform_roots=raw.get("terraform_roots", []),
     )
 
@@ -62,6 +64,12 @@ def write_config(config: PlatformGraphConfig, repo_root: Path | None = None) -> 
         lines.append(f"k8s_overlays = [{overlays}]\n")
     else:
         lines.append("k8s_overlays = []\n")
+
+    if config.k8s_manifests:
+        manifests = ", ".join(f'"{p}"' for p in config.k8s_manifests)
+        lines.append(f"k8s_manifests = [{manifests}]\n")
+    else:
+        lines.append("k8s_manifests = []\n")
 
     if config.terraform_roots:
         roots = ", ".join(f'"{p}"' for p in config.terraform_roots)

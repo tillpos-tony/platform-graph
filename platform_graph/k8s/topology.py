@@ -168,9 +168,7 @@ def _node_affinity_edges(
     """
     affinity = pod_spec.get("affinity", {}) or {}
     node_affinity = affinity.get("nodeAffinity", {}) or {}
-    required = (
-        node_affinity.get("requiredDuringSchedulingIgnoredDuringExecution", {}) or {}
-    )
+    required = node_affinity.get("requiredDuringSchedulingIgnoredDuringExecution", {}) or {}
     selector_terms = required.get("nodeSelectorTerms", []) or []
 
     nodes: list[NodePool] = []
@@ -189,13 +187,9 @@ def _node_affinity_edges(
             for value in expr.get("values", []) or []:
                 if not value:
                     continue
-                pool = NodePool(
-                    workspace=workspace, env=env, pool_key=key, pool_value=str(value)
-                )
+                pool = NodePool(workspace=workspace, env=env, pool_key=key, pool_value=str(value))
                 nodes.append(pool)
-                edges.append(
-                    Edge(from_node=workload_node, to_node=pool, rel_type="SCHEDULES_ON")
-                )
+                edges.append(Edge(from_node=workload_node, to_node=pool, rel_type="SCHEDULES_ON"))
 
     return nodes, edges
 
@@ -312,8 +306,13 @@ def _pod_affinity_edges(
         term = term or {}
         label_selector = term.get("labelSelector", {}) or {}
         _collect_affinity_edges(
-            label_selector, workload_node, namespace, workload_index,
-            rel_type, seen_pairs, edges,
+            label_selector,
+            workload_node,
+            namespace,
+            workload_index,
+            rel_type,
+            seen_pairs,
+            edges,
         )
 
     # preferredDuringSchedulingIgnoredDuringExecution → list of WeightedPodAffinityTerm
@@ -325,8 +324,13 @@ def _pod_affinity_edges(
         pod_affinity_term = weighted.get("podAffinityTerm", {}) or {}
         label_selector = pod_affinity_term.get("labelSelector", {}) or {}
         _collect_affinity_edges(
-            label_selector, workload_node, namespace, workload_index,
-            rel_type, seen_pairs, edges,
+            label_selector,
+            workload_node,
+            namespace,
+            workload_index,
+            rel_type,
+            seen_pairs,
+            edges,
         )
 
     return edges
@@ -383,9 +387,7 @@ def _collect_affinity_edges(
             pair = (workload_node.name, wl_node.name)
             if pair not in seen_pairs:
                 seen_pairs.add(pair)
-                edges.append(
-                    Edge(from_node=workload_node, to_node=wl_node, rel_type=rel_type)
-                )
+                edges.append(Edge(from_node=workload_node, to_node=wl_node, rel_type=rel_type))
 
 
 # ---------------------------------------------------------------------------
