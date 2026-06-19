@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from neo4j import Driver, GraphDatabase, Session
 
-from graphsearch.model import Edge, GlobalHubNode, WorkspaceScopedNode
+from platform_graph.model import Edge, GlobalHubNode, WorkspaceScopedNode
 
 # Type alias for nodes accepted by upsert_node
 Node = WorkspaceScopedNode | GlobalHubNode

@@ -1,4 +1,4 @@
-"""Tests for graphsearch.terraform.parse — static HCL extraction."""
+"""Tests for platform_graph.terraform.parse — static HCL extraction."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from graphsearch.model import Resource, TerraformModule
-from graphsearch.terraform.parse import parse_root
+from platform_graph.model import Resource, TerraformModule
+from platform_graph.terraform.parse import parse_root
 
 # ---------------------------------------------------------------------------
 # Fixtures: write minimal .tf files into tmp directories

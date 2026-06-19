@@ -1,4 +1,4 @@
-"""Tests for graphsearch.k8s.render — render mode detection and overlay rendering."""
+"""Tests for platform_graph.k8s.render — render mode detection and overlay rendering."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from graphsearch.k8s.render import detect_render_mode, render_overlay
+from platform_graph.k8s.render import detect_render_mode, render_overlay
 
 # ---------------------------------------------------------------------------
 # detect_render_mode

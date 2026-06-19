@@ -1,4 +1,4 @@
-"""Kustomize overlay rendering for graphsearch K8s indexing.
+"""Kustomize overlay rendering for platform-graph K8s indexing.
 
 Two responsibilities
 --------------------

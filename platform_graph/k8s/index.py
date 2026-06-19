@@ -18,21 +18,21 @@ from pathlib import Path
 
 from neo4j import Session
 
-from graphsearch.config import GraphsearchConfig
-from graphsearch.db import upsert_edge, upsert_node
-from graphsearch.k8s.parse import parse_resources
-from graphsearch.k8s.render import detect_render_mode, render_overlay
+from platform_graph.config import PlatformGraphConfig
+from platform_graph.db import upsert_edge, upsert_node
+from platform_graph.k8s.parse import parse_resources
+from platform_graph.k8s.render import detect_render_mode, render_overlay
 
 _GLOB_CHARS = frozenset("*?[")
 
 
-def index_k8s(config: GraphsearchConfig, session: Session, repo_root: Path | None = None) -> None:
+def index_k8s(config: PlatformGraphConfig, session: Session, repo_root: Path | None = None) -> None:
     """Index all K8s overlays listed in *config* into Memgraph via *session*.
 
     Parameters
     ----------
     config:
-        Parsed .graphsearch.toml config, including workspace name and the list
+        Parsed .platform-graph.toml config, including workspace name and the list
         of overlay paths.
     session:
         An open neo4j ``Session`` connected to Memgraph's Bolt endpoint.

@@ -1,4 +1,4 @@
-"""Tests for graphsearch.k8s.network — CAN_REACH edge derivation.
+"""Tests for platform_graph.k8s.network — CAN_REACH edge derivation.
 
 Covers:
 - NetworkPolicy ingress allow rules → CAN_REACH between workloads
@@ -9,8 +9,8 @@ Covers:
 
 from __future__ import annotations
 
-from graphsearch.k8s.network import derive_network_edges
-from graphsearch.model import ExternalEndpoint
+from platform_graph.k8s.network import derive_network_edges
+from platform_graph.model import ExternalEndpoint
 
 WS = "my-workspace"
 ENV = "prod"
@@ -434,7 +434,7 @@ class TestNoDefaultDeny:
 class TestIntegrationWithParseResources:
     def test_parse_resources_includes_can_reach_edges(self) -> None:
         """CAN_REACH edges appear in the output of parse_resources."""
-        from graphsearch.k8s.parse import parse_resources
+        from platform_graph.k8s.parse import parse_resources
 
         docs = [
             _deployment("frontend", labels={"app": "frontend"}),

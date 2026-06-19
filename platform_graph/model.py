@@ -1,4 +1,4 @@
-"""Node and Edge dataclasses for the graphsearch domain model.
+"""Node and Edge dataclasses for the platform-graph domain model.
 
 Two node categories exist in the graph:
 

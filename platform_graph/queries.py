@@ -1,15 +1,15 @@
-"""Named canned queries for graphsearch.
+"""Named canned queries for platform_graph.
 
 Each named query is a function that accepts a neo4j Session and optional
 keyword parameters, executes a Cypher statement, and returns a list of dicts.
 
 Usage from CLI::
 
-    graphsearch query list-workspaces
-    graphsearch query blast-radius --param workspace=my-repo --param env=prod \
+    platform-graph query list-workspaces
+    platform-graph query blast-radius --param workspace=my-repo --param env=prod \
         --param kind=Deployment --param namespace=default --param name=api
-    graphsearch query who-can-reach-capability --param resource=secrets --param verb=get
-    graphsearch query network-reachability
+    platform-graph query who-can-reach-capability --param resource=secrets --param verb=get
+    platform-graph query network-reachability
 """
 
 from __future__ import annotations

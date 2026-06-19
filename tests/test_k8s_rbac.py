@@ -1,4 +1,4 @@
-"""Tests for graphsearch.k8s.rbac — RBAC node and edge derivation.
+"""Tests for platform_graph.k8s.rbac — RBAC node and edge derivation.
 
 Covers:
 - Role/ClusterRole rules explode into one ApiPermission hub per (group, resource, verb)
@@ -15,12 +15,12 @@ from __future__ import annotations
 
 import pytest
 
-from graphsearch.k8s.rbac import (
+from platform_graph.k8s.rbac import (
     _COMMON_VERBS,
     _expand_verbs,
     derive_rbac_edges,
 )
-from graphsearch.model import ApiPermission, Role, RoleBinding, ServiceAccount
+from platform_graph.model import ApiPermission, Role, RoleBinding, ServiceAccount
 
 WS = "my-workspace"
 ENV = "prod"
@@ -563,7 +563,7 @@ class TestRoleNodeIdentity:
 class TestIntegrationWithParseResources:
     def test_parse_resources_includes_rbac_nodes_and_edges(self) -> None:
         """RBAC nodes and edges appear in the output of parse_resources."""
-        from graphsearch.k8s.parse import parse_resources
+        from platform_graph.k8s.parse import parse_resources
 
         docs = [
             _role(
@@ -593,7 +593,7 @@ class TestIntegrationWithParseResources:
 
     def test_parse_resources_rbac_and_structural_edges_coexist(self) -> None:
         """RBAC edges and structural K8s edges are both present in parse output."""
-        from graphsearch.k8s.parse import parse_resources
+        from platform_graph.k8s.parse import parse_resources
 
         docs = [
             {
